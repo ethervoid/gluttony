@@ -1,20 +1,24 @@
 package gluttony
 
 import (
-	"strixhq.com/gluttony/connector"
+	"strixhq.com/gluttony/consumer"
 	"strixhq.com/gluttony/task"
 )
 
 type Gluttony struct {
-	conn *connector.Connector
+	host        string
+	taskFactory *task.TaskFactory
 }
 
 func New(host string, taskFactory task.TaskFactory) *Gluttony {
 	client := Gluttony{}
-	connector.New("rabbitmq")
-	//Excample of how to get a task from caller project
-	email := taskFactory.New("email_notification")
-	email.Execute()
+	client.host = host
+	client.taskFactory = &taskFactory
 
 	return &client
+}
+
+func (gluttony *Gluttony) Start(consumers int) {
+	consumer := consumer.New(gluttony.host, "rabbitmq", gluttony.taskFactory)
+	consumer.Start("strix")
 }
