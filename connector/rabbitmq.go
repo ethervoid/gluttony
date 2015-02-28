@@ -23,7 +23,7 @@ func NewRabbitMQConnector() *rabbitMQConnector {
 func (connector *rabbitMQConnector) Connect(host string, queues []string) error {
 	connector.host = host
 	connector.queues = queues
-	logrus.Info("Trying to connect to RabbitMQ to ", host)
+	logrus.Debug("Trying to connect to RabbitMQ to ", host)
 	connection, err := amqp.Dial(host)
 	if err != nil {
 		logrus.Error("Can't connect to RabbitMQ in ", host)
@@ -44,7 +44,7 @@ func (connector *rabbitMQConnector) Connect(host string, queues []string) error 
 
 func (connector *rabbitMQConnector) reconnect() {
 	for {
-		logrus.Info("Trying to reconnect...")
+		logrus.Debug("Trying to reconnect...")
 		err := connector.Connect(connector.host, connector.queues)
 		if err != nil {
 			//TODO Change to incremental time
@@ -59,7 +59,7 @@ func (connector *rabbitMQConnector) reconnect() {
 func (connector *rabbitMQConnector) Consume(delivery chan []byte) {
 	connector.deliveryChan = delivery
 	for _, queue := range connector.queues {
-		logrus.Info("Start consuming in queue ", queue)
+		logrus.Debug("Listening in queue ", queue)
 		firehose, err := connector.channel.Consume(
 			queue, "", true, false, false, false, nil,
 		)

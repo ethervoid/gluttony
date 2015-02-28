@@ -1,6 +1,8 @@
 package gluttony
 
 import (
+	"sync"
+
 	"github.com/Sirupsen/logrus"
 	"strixhq.com/gluttony/consumer"
 	"strixhq.com/gluttony/task"
@@ -39,16 +41,24 @@ func (gluttony *gluttony) RegisterJobsFactory(taskFactory task.TaskFactory) {
 }
 
 func (gluttony *gluttony) Start(consumers int) {
-	consumer, err := consumer.New(
-		gluttony.host,
-		gluttony.connectorType,
-		gluttony.taskFactory,
-		gluttony.queues,
-	)
+	var wg sync.WaitGroup
+	wg.Add(consumers)
+	for i := 0; i < consumers; i++ {
+		go func() {
+			consumer, err := consumer.New(
+				gluttony.host,
+				gluttony.connectorType,
+				gluttony.taskFactory,
+				gluttony.queues,
+			)
 
-	if err != nil {
-		logrus.Fatal("Error trying to create consumer")
+			if err != nil {
+				logrus.Fatal("Error trying to create consumer")
+			}
+
+			defer wg.Done()
+			consumer.Start()
+		}()
 	}
-
-	consumer.Start()
+	wg.Wait()
 }
