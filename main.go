@@ -1,6 +1,7 @@
 package gluttony
 
 import (
+	"github.com/Sirupsen/logrus"
 	"strixhq.com/gluttony/consumer"
 	"strixhq.com/gluttony/task"
 )
@@ -19,6 +20,17 @@ func New(host string, taskFactory task.TaskFactory) *Gluttony {
 }
 
 func (gluttony *Gluttony) Start(consumers int) {
-	consumer := consumer.New(gluttony.host, "rabbitmq", gluttony.taskFactory)
-	consumer.Start("strix")
+	queues := []string{"strix"}
+	consumer, err := consumer.New(
+		gluttony.host,
+		"rabbitmq",
+		gluttony.taskFactory,
+		queues,
+	)
+
+	if err != nil {
+		logrus.Fatal("Error trying to create consumer")
+	}
+
+	consumer.Start()
 }
