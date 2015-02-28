@@ -11,8 +11,16 @@ type Consumer struct {
 	taskFactory *task.TaskFactory
 }
 
-func New(host string, connectorType string, taskFactory *task.TaskFactory, queues []string) (*Consumer, error) {
-	connector := connector.New(connectorType)
+func New(
+	host string, connectorType string, taskFactory *task.TaskFactory,
+	queues []string) (*Consumer, error) {
+
+	connector, err := connector.New(connectorType)
+	if err != nil {
+		logrus.Error("Can't create a connector for type: ", connectorType)
+		return nil, err
+	}
+
 	consumer := Consumer{connector, taskFactory}
 	connector.Connect(host, queues)
 

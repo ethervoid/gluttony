@@ -6,26 +6,44 @@ import (
 	"strixhq.com/gluttony/task"
 )
 
-type Gluttony struct {
-	host        string
-	taskFactory *task.TaskFactory
+type gluttony struct {
+	host          string
+	connectorType string
+	queues        []string
+	taskFactory   *task.TaskFactory
 }
 
-func New(host string, taskFactory task.TaskFactory) *Gluttony {
-	client := Gluttony{}
+func New(host string, connectorType string, queues []string) *gluttony {
+	if len(queues) == 0 {
+		logrus.Fatal("You must pass at least one queue")
+	}
+
+	if host == "" {
+		logrus.Fatal("Host can't be empty")
+	}
+
+	if connectorType == "" {
+		logrus.Fatal("Connector type can't be empty")
+	}
+
+	client := gluttony{}
 	client.host = host
-	client.taskFactory = &taskFactory
+	client.connectorType = connectorType
+	client.queues = queues
 
 	return &client
 }
 
-func (gluttony *Gluttony) Start(consumers int) {
-	queues := []string{"strix"}
+func (gluttony *gluttony) RegisterJobsFactory(taskFactory task.TaskFactory) {
+	gluttony.taskFactory = &taskFactory
+}
+
+func (gluttony *gluttony) Start(consumers int) {
 	consumer, err := consumer.New(
 		gluttony.host,
-		"rabbitmq",
+		gluttony.connectorType,
 		gluttony.taskFactory,
-		queues,
+		gluttony.queues,
 	)
 
 	if err != nil {

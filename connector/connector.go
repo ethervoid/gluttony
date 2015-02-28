@@ -1,18 +1,17 @@
 package connector
 
-import "github.com/Sirupsen/logrus"
+import "fmt"
 
 type Connector interface {
 	Connect(host string, queues []string) error
 	Consume(delivery chan []byte)
 }
 
-func New(connectorType string) Connector {
+func New(connectorType string) (Connector, error) {
 	switch connectorType {
 	case "rabbitmq":
-		return NewRabbitMQConnector()
+		return NewRabbitMQConnector(), nil
 	default:
-		logrus.Error("Unknown connector type")
-		return nil
+		return nil, fmt.Errorf("Uknown connector type")
 	}
 }
