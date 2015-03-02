@@ -41,11 +41,12 @@ func (consumer *Consumer) Start() {
 	go consumer.connector.Consume(delivery)
 	for {
 		message := <-delivery
+		logrus.Info("Received message: ", string(message))
 		task, err := task.Unmarshal(message)
 		if err != nil {
 			logrus.Error("Message received doesn't meet the requirements for a Task")
 		} else {
-			logrus.Debugf(
+			logrus.Infof(
 				"Message receive by consume %s with payload %s ",
 				consumer.uuid.String(),
 				task.String(),
