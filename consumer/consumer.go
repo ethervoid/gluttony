@@ -12,16 +12,13 @@ import (
 type Consumer struct {
 	uuid        *uuid.UUID
 	connector   connector.Connector
-	taskFactory *task.TaskFactory
+	taskFactory task.TaskFactory
 }
 
-func New(
-	host string, connectorType string,
-	taskFactory *task.TaskFactory, queues []string) (*Consumer, error) {
-
-	connector, err := connector.New(connectorType)
+func New(connData *connector.ConnectorData, taskFactory task.TaskFactory) (*Consumer, error) {
+	connector, err := connector.New(connData)
 	if err != nil {
-		logrus.Error("Can't create a connector for type: ", connectorType)
+		logrus.Error("Can't create a connector for type: ", connData.Type)
 		return nil, err
 	}
 
@@ -30,7 +27,11 @@ func New(
 		logrus.Fatal("Can't generate an UUID for the consumer")
 	}
 	consumer := Consumer{uuid, connector, taskFactory}
-	connector.Connect(host, queues)
+	connerr := connector.Connect()
+	if connerr != nil {
+		logrus.Error("Error connecting to broker")
+		return nil, connerr
+	}
 
 	return &consumer, nil
 }
@@ -42,15 +43,17 @@ func (consumer *Consumer) Start() {
 	for {
 		message := <-delivery
 		logrus.Info("Received message: ", string(message))
-		task, err := task.Unmarshal(message)
+		taskData, err := task.Unmarshal(message)
 		if err != nil {
 			logrus.Error("Message received doesn't meet the requirements for a Task")
 		} else {
 			logrus.Infof(
 				"Message receive by consume %s with payload %s ",
 				consumer.uuid.String(),
-				task.String(),
+				taskData.String(),
 			)
+			task := consumer.taskFactory.New(taskData)
+			task.Execute()
 		}
 	}
 }

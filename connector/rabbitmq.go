@@ -8,25 +8,26 @@ import (
 )
 
 type rabbitMQConnector struct {
-	host         string
-	queues       []string
+	connData     *ConnectorData
 	consumerId   string
 	deliveryChan chan []byte
 	conn         *amqp.Connection
 	channel      *amqp.Channel
 }
 
-func NewRabbitMQConnector() *rabbitMQConnector {
-	return &rabbitMQConnector{}
+func NewRabbitMQConnector(connData *ConnectorData) *rabbitMQConnector {
+	rabbitMQ := &rabbitMQConnector{}
+	rabbitMQ.connData = connData
+
+	return rabbitMQ
 }
 
-func (connector *rabbitMQConnector) Connect(host string, queues []string) error {
-	connector.host = host
-	connector.queues = queues
-	logrus.Debug("Trying to connect to RabbitMQ to ", host)
-	connection, err := amqp.Dial(host)
+func (connector *rabbitMQConnector) Connect() error {
+	uri := connector.composeUri()
+	logrus.Debug("Trying to connect to RabbitMQ to ", uri.String())
+	connection, err := amqp.Dial(uri.String())
 	if err != nil {
-		logrus.Error("Can't connect to RabbitMQ in ", host)
+		logrus.Error("Can't connect to RabbitMQ in ", uri.String())
 		return err
 	}
 	connector.conn = connection
@@ -34,7 +35,7 @@ func (connector *rabbitMQConnector) Connect(host string, queues []string) error 
 
 	channel, err := connection.Channel()
 	if err != nil {
-		logrus.Error("Can't create a channel to RabbitMQ in ", host)
+		logrus.Error("Can't create a channel to RabbitMQ in ", uri.String())
 		return err
 	}
 	connector.channel = channel
@@ -45,7 +46,7 @@ func (connector *rabbitMQConnector) Connect(host string, queues []string) error 
 func (connector *rabbitMQConnector) reconnect() {
 	for {
 		logrus.Debug("Trying to reconnect...")
-		err := connector.Connect(connector.host, connector.queues)
+		err := connector.Connect()
 		if err != nil {
 			//TODO Change to incremental time
 			time.Sleep(5 * time.Second)
@@ -58,7 +59,7 @@ func (connector *rabbitMQConnector) reconnect() {
 
 func (connector *rabbitMQConnector) Consume(delivery chan []byte) {
 	connector.deliveryChan = delivery
-	for _, queue := range connector.queues {
+	for _, queue := range connector.connData.Queues {
 		logrus.Debug("Listening in queue ", queue)
 		firehose, err := connector.channel.Consume(
 			queue, "", true, false, false, false, nil,
@@ -86,4 +87,16 @@ func (connector *rabbitMQConnector) checkForClose() {
 		logrus.Error("Connection error: ", closeEvent)
 		connector.reconnect()
 	}()
+}
+
+func (connector *rabbitMQConnector) composeUri() amqp.URI {
+	uri := amqp.URI{}
+	uri.Scheme = connector.connData.Type
+	uri.Host = connector.connData.Host
+	uri.Port = connector.connData.Port
+	uri.Username = connector.connData.User
+	uri.Password = connector.connData.Password
+	uri.Vhost = connector.connData.Args["vhost"].(string)
+
+	return uri
 }

@@ -4,40 +4,37 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
+	"strixhq.com/gluttony/connector"
 	"strixhq.com/gluttony/consumer"
 	"strixhq.com/gluttony/task"
 )
 
 type gluttony struct {
-	host          string
-	connectorType string
-	queues        []string
-	taskFactory   *task.TaskFactory
+	connData    *connector.ConnectorData
+	taskFactory task.TaskFactory
 }
 
-func New(host string, connectorType string, queues []string) *gluttony {
-	if len(queues) == 0 {
+func New(connData *connector.ConnectorData) *gluttony {
+	if len(connData.Queues) == 0 {
 		logrus.Fatal("You must pass at least one queue")
 	}
 
-	if host == "" {
+	if connData.Host == "" {
 		logrus.Fatal("Host can't be empty")
 	}
 
-	if connectorType == "" {
+	if connData.Type == "" {
 		logrus.Fatal("Connector type can't be empty")
 	}
 
 	client := gluttony{}
-	client.host = host
-	client.connectorType = connectorType
-	client.queues = queues
+	client.connData = connData
 
 	return &client
 }
 
 func (gluttony *gluttony) RegisterJobsFactory(taskFactory task.TaskFactory) {
-	gluttony.taskFactory = &taskFactory
+	gluttony.taskFactory = taskFactory
 }
 
 func (gluttony *gluttony) Start(consumers int) {
@@ -46,10 +43,8 @@ func (gluttony *gluttony) Start(consumers int) {
 	for i := 0; i < consumers; i++ {
 		go func() {
 			consumer, err := consumer.New(
-				gluttony.host,
-				gluttony.connectorType,
+				gluttony.connData,
 				gluttony.taskFactory,
-				gluttony.queues,
 			)
 
 			if err != nil {
