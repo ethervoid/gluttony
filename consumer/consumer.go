@@ -45,7 +45,7 @@ func (consumer *Consumer) Start() {
 		logrus.Info("Received message: ", string(message))
 		taskData, err := task.Unmarshal(message)
 		if err != nil {
-			logrus.Error("Message received doesn't meet the requirements for a Task")
+			logrus.Error("Message received doesn't meet the requirements for a Task: ", err)
 		} else {
 			logrus.Infof(
 				"Message receive by consume %s with payload %s ",
