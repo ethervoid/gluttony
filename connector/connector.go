@@ -18,6 +18,7 @@ type ConnectorData struct {
 type Connector interface {
 	Connect() error
 	Consume(delivery chan []byte)
+	Close() error
 }
 
 func New(connData *ConnectorData) (Connector, error) {

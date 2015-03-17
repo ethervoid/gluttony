@@ -100,3 +100,11 @@ func (connector *rabbitMQConnector) composeUri() amqp.URI {
 
 	return uri
 }
+
+func (connector *rabbitMQConnector) Close() error {
+	if err := connector.conn.Close(); err != nil {
+		return err
+	}
+
+	return nil
+}

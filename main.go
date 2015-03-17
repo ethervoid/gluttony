@@ -52,6 +52,7 @@ func (gluttony *gluttony) Start(consumers int) {
 			}
 
 			defer wg.Done()
+			defer consumer.Close()
 			consumer.Start()
 		}()
 	}
