@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"github.com/Sirupsen/logrus"
+	"github.com/ethervoid/gluttony/connector"
+	"github.com/ethervoid/gluttony/task"
 	"github.com/nu7hatch/gouuid"
-	"strixhq.com/gluttony/connector"
-	"strixhq.com/gluttony/task"
 )
 
 type Consumer struct {

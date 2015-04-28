@@ -4,9 +4,9 @@ import (
 	"sync"
 
 	"github.com/Sirupsen/logrus"
-	"strixhq.com/gluttony/connector"
-	"strixhq.com/gluttony/consumer"
-	"strixhq.com/gluttony/task"
+	"github.com/ethervoid/gluttony/connector"
+	"github.com/ethervoid/gluttony/consumer"
+	"github.com/ethervoid/gluttony/task"
 )
 
 type gluttony struct {
