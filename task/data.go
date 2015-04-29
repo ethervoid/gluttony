@@ -36,8 +36,6 @@ func (taskData *TaskData) String() string {
 		switch t := arg.(type) {
 		case string:
 			output = output + string(t) + ", "
-		case int:
-			output = output + strconv.Itoa(t) + ", "
 		case float64:
 			output = output + strconv.FormatFloat(t, 'f', 2, 64) + ", "
 		}

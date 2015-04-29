@@ -58,18 +58,17 @@ func (consumer *Consumer) executeTask(message []byte) {
 		logrus.Errorf("Can't compose task data: %s", err)
 	}
 	tsk := consumer.taskFactory.New(taskData)
-	// Panic handling. We don't want to shutdown the consumer
+	// Panic handling. We don't want to shutdown the consumer for a runtime exception
 	defer func() {
-		if e, ok := recover().(error); ok {
+		if e := recover(); e != nil {
 			logrus.Errorf("Panic executing task: %v", e)
 		}
 	}()
 	for i := 0; i < int(taskData.MaxRetries); i++ {
 		if err := tsk.Execute(); err != nil {
-			logrus.Errorf("Error executing task. Retrying..%s", err.Error())
-			logrus.Infof("Current: %v --- Max: %v", taskData.CurrentRetries, taskData.MaxRetries)
+			logrus.Errorf("Error executing task. Retrying...%s", err)
 			if int(taskData.CurrentRetries) == (int(taskData.MaxRetries) - 1) {
-				logrus.Errorf("Max number of retries reached!")
+				logrus.Errorf("Max number of retries reached for task %s", err)
 			} else {
 				taskData.CurrentRetries += 1
 				time.Sleep(time.Duration(taskData.RetryTime) * time.Second)
@@ -89,7 +88,7 @@ func (consumer *Consumer) composeTaskData(message []byte) (*task.TaskData, error
 		logrus.Debugf(
 			"Message receive by consume %s with payload %s ",
 			consumer.uuid.String(),
-			taskData.String(),
+			taskData,
 		)
 
 		return taskData, nil
