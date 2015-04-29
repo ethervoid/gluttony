@@ -27,3 +27,7 @@ and,
 # What brokers can i use?
 
 Right know Gluttony only supports ```RabbitMQ```.
+
+# Examples
+
+In the directory `examples` you could see a factory and task example and the way it should be implemented
