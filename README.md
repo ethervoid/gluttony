@@ -2,7 +2,7 @@
 
 Insasiatable tasks consumer and executor :)
 
-Current state: **In development...**
+Current state: **0.1**
 
 # What is Gluttony?
 
